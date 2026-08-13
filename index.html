@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公務員薪資與福利計算器</title>
+    <style>
+        /* 頁面整體設定與排版 */
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        /* 建立雙欄版面的外層容器 */
+        .main-wrapper {
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 20px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        /* 左側：計算器與諮詢區塊 */
+        .calculator-container {
+            flex: 1;
+            min-width: 320px;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            align-self: flex-start;
+        }
+
+        /* 右側：福利資訊表區塊 */
+        .info-container {
+            flex: 1.5; 
+            min-width: 320px;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        h2, h3 {
+            text-align: center;
+            color: #00796b;
+            margin-top: 0;
+        }
+
+        /* 表單元素美化 */
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            margin-top: 15px;
+        }
+        select, input {
+            width: 95%; 
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #004d40;
+        }
+
+        /* 計算結果顯示區 */
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e0f2f1;
+            border-left: 5px solid #00796b;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .error-msg {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .bonus-text {
+            color: #d84315;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 10px;
+            display: block;
+        }
+
+        /* 免責說明文字樣式 */
+        .disclaimer {
+            font-size: 12px;
+            color: #666;
+            margin-top: 15px;
+            line-height: 1.5;
+        }
+
+        /* 表格美化 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #00796b;
+            color: white;
+            text-align: center;
+        }
+        .text-center {
+            text-align: center;
+        }
+
+        /* LINE 諮詢區塊樣式 */
+        .line-consult-section {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px dashed #00796b;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .line-consult-section p {
+            margin-top: 0;
+            color: #333;
+            font-weight: bold;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+        .line-consult-section select {
+            width: 100%;
+            border-color: #00c300; /* LINE 代表綠色 */
+            border-width: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        
+        <!-- 左側：計算器與諮詢區塊 -->
+        <div class="calculator-container">
+            <h2>公務員薪資計算器</h2>
+            
+            <label for="examLevel">請選擇考試等別：</label>
+            <select id="examLevel">
+                <option value="high">高考三級</option>
+                <option value="normal">普通考試</option>
+                <option value="basic">初等考試</option>
+            </select>
+            
+            <label for="yearsOfService">預估任職年資 (0 ~ 20 年)：</label>
+            <input type="number" id="yearsOfService" min="0" max="20" value="0">
+            
+            <button onclick="calculateSalary()">計算預估薪資</button>
+
+            <!-- 結果顯示區 -->
+            <div id="output" style="display: none;"></div>
+
+            <!-- 新增免責說明文字 -->
+            <p class="disclaimer">註：本試算結果係依平均升遷狀況推算，僅供參考。實際薪資將因個人考核而異，各項給與以分發機關及最新法規公告為準。</p>
+
+            <!-- LINE 真人線上諮詢區塊 -->
+            <div class="line-consult-section">
+                <p>想要了解更多公職薪水、福利等相關問題<br>歡迎加入三民輔考所屬地區官方LINE@<br>真人線上諮詢</p>
+                <select id="lineBranch" onchange="openLineLink()">
+                    <option value="">-- 請選擇想諮詢的分班 --</option>
+                    <option value="https://line.me/R/ti/p/@3people/s">台北本部服務處</option>
+                    <option value="https://line.me/R/ti/p/@xat.0000109960.owu/s">板橋服務處</option>
+                    <option value="https://line.me/R/ti/p/@575xjpel/s">三重服務處</option>
+                    <option value="https://line.me/R/ti/p/@919mghpn/s">花蓮服務處</option>
+                    <option value="https://line.me/R/ti/p/@xat.0000109961.d50/s">桃園服務處</option>
+                    <option value="https://line.me/R/ti/p/@xat.0000109962.x26/s">中壢服務處</option>
+                    <option value="https://line.me/R/ti/p/@xat.0000109963.azb/s">新竹服務處</option>
+                    <option value="https://line.me/R/ti/p/@xat.0000109965.4oe/s">台中站前服務處</option>
+                    <option value="https://line.me/R/ti/p/@xat.0000109964.adz/s">台中復興服務處</option>
+                    <option value="https://line.me/R/ti/p/@xat.0000109966.maz/s">台中逢甲服務處</option>
+                    <option value="https://line.me/R/ti/p/@zxh0986k/s">彰化員林服務處</option>
+                    <option value="https://line.me/R/ti/p/@325yzgks/s">斗六服務處</option>
+                    <option value="https://line.me/R/ti/p/@uww2096a/s">嘉義服務處</option>
+                    <option value="https://line.me/R/ti/p/@xat.0000109967.4te/s">台南服務處</option>
+                    <option value="https://line.me/R/ti/p/@xat.0000109968.vnb/s">高雄服務處</option>
+                    <option value="https://line.me/R/ti/p/@xat.0000109969.q5a/s">高雄鳳山服務處</option>
+                    <option value="https://line.me/R/ti/p/@762qmsia/s">高雄楠梓服務處</option>
+                    <option value="https://line.me/R/ti/p/@814fgyhf/s">屏東中山服務處</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 右側：福利補助表格 -->
+        <div class="info-container">
+            <h3>各項福利補助表</h3>
+            
+            <!-- 婚喪生育補助表 -->
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="3">婚喪生育補助表</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td width="25%" class="text-center"><b>結婚補助</b></td>
+                        <td colspan="2">二個月 薪俸額</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center"><b>生育補助</b></td>
+                        <td colspan="2">二個月 薪俸額<br>（雙生以上者，按比例增給）</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2" class="text-center"><b>喪葬補助</b></td>
+                        <td width="35%" class="text-center">父母、配偶死亡</td>
+                        <td width="40%">五個月 薪俸額</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">子女死亡</td>
+                        <td>三個月 薪俸額</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- 子女教育補助表 -->
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="2">子女教育補助表</th>
+                        <th>支給數額 (元)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="3" width="30%" class="text-center"><b>大學及獨立學院</b></td>
+                        <td>公立</td>
+                        <td>13,600</td>
+                    </tr>
+                    <tr>
+                        <td>私立</td>
+                        <td>35,800</td>
+                    </tr>
+                    <tr>
+                        <td>夜間學制 (含進修學士班、進修部)</td>
+                        <td>14,300</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3" class="text-center"><b>五專後二年及二專</b></td>
+                        <td>公立</td>
+                        <td>10,000</td>
+                    </tr>
+                    <tr>
+                        <td>私立</td>
+                        <td>28,000</td>
+                    </tr>
+                    <tr>
+                        <td>夜間部</td>
+                        <td>14,300</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2" class="text-center"><b>五專前三年</b></td>
+                        <td>公立</td>
+                        <td>7,700</td>
+                    </tr>
+                    <tr>
+                        <td>私立</td>
+                        <td>20,800</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2" class="text-center"><b>高中</b></td>
+                        <td>公立</td>
+                        <td>3,800</td>
+                    </tr>
+                    <tr>
+                        <td>私立</td>
+                        <td>13,500</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3" class="text-center"><b>高職</b></td>
+                        <td>公立</td>
+                        <td>3,200</td>
+                    </tr>
+                    <tr>
+                        <td>私立</td>
+                        <td>18,900</td>
+                    </tr>
+                    <tr>
+                        <td>實用技能班</td>
+                        <td>1,500</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center"><b>國中</b></td>
+                        <td>公私立</td>
+                        <td>500</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center"><b>國小</b></td>
+                        <td>公私立</td>
+                        <td>500</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p style="font-size: 12px; color: #666; line-height: 1.4;">
+                * 備註：上述「薪俸額」係指當下之「本俸」。<br>
+                * 備註：年終與考績獎金（平均約 2.5 個月）計算基礎通常包含本俸與專業加給。
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // 計算薪水的函數
+        function calculateSalary() {
+            const yearsInput = document.getElementById('yearsOfService').value;
+            const years = parseInt(yearsInput, 10);
+            const outputDiv = document.getElementById('output');
+
+            if (isNaN(years) || years < 0 || years > 20) {
+                outputDiv.innerHTML = '<div class="error-msg">請輸入 0 到 20 之間的數字。</div>';
+                outputDiv.style.display = 'block';
+                outputDiv.className = 'result';
+                return; 
+            }
+
+            const salaryData = {
+                'high': { 
+                    title: '高考三級', 
+                    baseSalaries: [
+                        29270, 29270, 30410, 31560, 32710, 33860, // 第 0~5 年
+                        35010, 36160, 37310, 38460, 39610, 40760, // 第 6~11 年
+                        41900, 44970, 46500, 48030, 49560, 51100, // 第 12~17 年
+                        52630, 54160, 54160                       // 第 18~20 年 (第19與20年封頂為54160)
+                    ],
+                    additions: [
+                        25890, 25890, 25890, 25890, 26830, 26830, // 第 0~5 年
+                        26830, 29850, 29850, 29850, 30930, 30930, // 第 6~11 年
+                        30930, 30930, 30930, 30930, 30930, 30930, // 第 12~17 年
+                        30930, 30930, 30930                       // 第 18~20 年
+                    ]
+                },
+                'normal': { 
+                    title: '普通考試', 
+                    baseSalaries: [
+                        21220, 21220, 21990, 22750, 23520, 24290, // 第 0~5 年
+                        25050, 25820, 26580, 27350, 28120, 29270, // 第 6~11 年
+                        30410, 31560, 32710, 33860, 35010, 36160, // 第 12~17 年
+                        37310, 38460, 39610                       // 第 18~20 年
+                    ],
+                    additions: [
+                        21750, 21750, 21750, 21750, 22110, 22110, // 第 0~5 年
+                        22110, 22730, 22730, 22730, 22730, 22730, // 第 6~11 年
+                        22730, 22730, 22730, 22730, 22730, 22730, // 第 12~17 年
+                        22730, 22730, 22730                       // 第 18~20 年
+                    ]
+                },
+                'basic': { 
+                    title: '初等考試', 
+                    baseSalaries: [
+                        13380, 13380, 13920, 14460, 17390, 18160, // 第 0~5 年
+                        18920, 21220, 21990, 22750, 23520, 24290, // 第 6~11 年
+                        25050, 25820, 26580, 27350, 28120, 29270, // 第 12~17 年
+                        30410, 31560, 32710                       // 第 18~20 年
+                    ],
+                    additions: [
+                        21500, 21500, 21500, 21500, 21690, 21690, // 第 0~5 年
+                        21690, 21750, 21750, 21750, 22110, 22110, // 第 6~11 年
+                        22110, 22730, 22730, 22730, 22730, 22730, // 第 12~17 年
+                        22730, 22730, 22730                       // 第 18~20 年
+                    ]
+                }
+            };
+
+            const selectedLevel = document.getElementById('examLevel').value;
+            const data = salaryData[selectedLevel];
+            
+            const currentBaseSalary = data.baseSalaries[years];
+            const currentAddition = data.additions[years];
+            const total = currentBaseSalary + currentAddition;
+            
+            const yearEndBonus = total * 2.5;
+
+            const resultHTML = `
+                <strong>【${data.title}】任職 ${years} 年試算結果：</strong><br>
+                本俸：${currentBaseSalary.toLocaleString()} 元<br>
+                專業加給：${currentAddition.toLocaleString()} 元<br>
+                <hr>
+                <strong>每月合計：${total.toLocaleString()} 元</strong>
+                <span class="bonus-text">💰 預估年終/考績獎金 (2.5個月)：<br>${yearEndBonus.toLocaleString()} 元</span>
+            `;
+            
+            outputDiv.innerHTML = resultHTML;
+            outputDiv.className = 'result';
+            outputDiv.style.display = 'block';
+        }
+
+        // 處理 LINE 網址跳轉的函數
+        function openLineLink() {
+            const selectElement = document.getElementById('lineBranch');
+            const url = selectElement.value;
+            
+            if (url) {
+                window.open(url, '_blank');
+                selectElement.selectedIndex = 0;
+            }
+        }
+    </script>
+</body>
+</html>
